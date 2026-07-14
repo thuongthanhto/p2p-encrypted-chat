@@ -1,0 +1,17 @@
+{
+  "name": "p2p-encrypted-chat",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test:crypto": "node test/crypto.test.js",
+    "test:e2e": "node test/e2e.js"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.0.0",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.0.0"
+  }
+}

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>P2P Chat — encrypted, serverless</title>
+</head>
+<body>
+  <main id="app">
+
+    <!-- Screen 1: Connect -->
+    <section id="screen-home">
+      <h1>🔒 P2P Chat</h1>
+      <p class="sub">Encrypted 1-on-1 chat, direct machine-to-machine. No server, no account.</p>
+      <p class="warn">⚠️ Messages are <b>not saved</b> — close the tab and they're gone. If the connection drops, you must start a new session.</p>
+      <div class="row">
+        <button id="btn-host" class="big">Create room</button>
+        <button id="btn-join" class="big secondary">Join room</button>
+      </div>
+    </section>
+
+    <!-- Host screen -->
+    <section id="screen-host" hidden>
+      <h2>Create room</h2>
+      <div class="step">
+        <h3>1 · Passphrase</h3>
+        <p class="hint">Read it out loud, or send it over a <b>different channel</b> than the code below.</p>
+        <div id="host-pass" class="passphrase">…</div>
+        <button class="copy" data-copy="host-pass">Copy passphrase</button>
+      </div>
+      <div class="step">
+        <h3>2 · Send CODE-A to your friend</h3>
+        <p class="hint">Via Signal / Zalo / email. The string is encrypted — the middleman can't read anything.</p>
+        <textarea id="host-offer" class="blob" readonly placeholder="generating…"></textarea>
+        <button class="copy" data-copy="host-offer">Copy CODE-A</button>
+      </div>
+      <div class="step">
+        <h3>3 · Paste CODE-B you get back</h3>
+        <textarea id="host-answer" class="blob" placeholder="paste CODE-B here…"></textarea>
+        <button id="btn-host-connect">Connect</button>
+      </div>
+      <p id="host-status" class="status"></p>
+      <p id="host-error" class="error" hidden></p>
+    </section>
+
+    <!-- Guest screen -->
+    <section id="screen-join" hidden>
+      <h2>Join room</h2>
+      <div class="step">
+        <h3>1 · Enter passphrase</h3>
+        <input id="join-pass" type="text" autocomplete="off" spellcheck="false"
+               placeholder="e.g. maple-crane-lagoon-fern-73" />
+      </div>
+      <div class="step">
+        <h3>2 · Paste CODE-A</h3>
+        <textarea id="join-offer" class="blob" placeholder="paste CODE-A here…"></textarea>
+        <button id="btn-join-answer">Create CODE-B</button>
+      </div>
+      <div class="step">
+        <h3>3 · Send CODE-B back to the room creator</h3>
+        <textarea id="join-answer" class="blob" readonly placeholder="appears after step 2…"></textarea>
+        <button class="copy" data-copy="join-answer">Copy CODE-B</button>
+      </div>
+      <p id="join-status" class="status"></p>
+      <p id="join-error" class="error" hidden></p>
+    </section>
+
+    <!-- Chat screen -->
+    <section id="screen-chat" hidden>
+      <header>
+        <span id="chat-state" class="dot"></span>
+        <span>P2P connected · AES-GCM encrypted · no history saved</span>
+      </header>
+      <div id="banner" class="banner" hidden>
+        Connection lost — a new session is needed.
+        <button id="btn-restart">Start over</button>
+      </div>
+      <ul id="messages"></ul>
+      <form id="composer">
+        <input id="msg-input" type="text" autocomplete="off" placeholder="Say something…" />
+        <button type="submit">Send</button>
+      </form>
+    </section>
+
+  </main>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

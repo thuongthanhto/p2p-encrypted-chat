@@ -3,7 +3,7 @@ import {
   generatePassphrase, randomSalt, deriveKeys,
   sealSdp, parseBlob, openSdp, encryptMsg, decryptMsg, cleanBlob,
 } from './crypto.js'
-import { createPeer, waitIceComplete, hasCandidates } from './rtc.js'
+import { createPeer, waitIceComplete, hasCandidates, candidateSummary } from './rtc.js'
 
 const $ = (id) => document.getElementById(id)
 const screens = ['screen-home', 'screen-host', 'screen-join', 'screen-chat']
@@ -169,7 +169,10 @@ $('btn-host').addEventListener('click', async () => {
       return
     }
     $('host-offer').value = await sealSdp(sdp, keys.sdpKey, keys.salt)
-    setStatus(statusEl, 'waiting for CODE-B… — exchange codes within a few minutes; waiting too long can break the session')
+    const summary = candidateSummary(sdp)
+    console.log('[p2p] candidates:', JSON.stringify(summary))
+    setStatus(statusEl, 'waiting for CODE-B… — exchange codes within a few minutes; waiting too long can break the session' +
+      (summary.srflx === 0 ? ' · ⚠️ STUN unreachable: this network blocks UDP, cross-network P2P will likely fail (a phone hotspot is more reliable)' : ''))
   } catch (err) {
     setError($('host-error'), errorMessage(err))
   }
@@ -220,7 +223,10 @@ $('btn-join-answer').addEventListener('click', async () => {
       return
     }
     $('join-answer').value = await sealSdp(sdp, keys.sdpKey, keys.salt)
-    setStatus(statusEl, 'send CODE-B to the other side, then wait for the connection…')
+    const summary = candidateSummary(sdp)
+    console.log('[p2p] candidates:', JSON.stringify(summary))
+    setStatus(statusEl, 'send CODE-B to the other side, then wait for the connection…' +
+      (summary.srflx === 0 ? ' · ⚠️ STUN unreachable: this network blocks UDP, cross-network P2P will likely fail (a phone hotspot is more reliable)' : ''))
   } catch (err) {
     setError($('join-error'), errorMessage(err))
   }

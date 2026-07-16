@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {
   generatePassphrase, randomSalt, deriveKeys,
   sealSdp, parseBlob, openSdp, encryptMsg, decryptMsg, cleanBlob,
+  encryptJson, decryptJson, sealExport, parseExportBlob, openExport,
 } from '../src/crypto.js'
 import { WORDS } from '../src/words.js'
 
@@ -55,5 +56,22 @@ const kA = await deriveKeys(nfd, salt)
 const kB = await deriveKeys(nfc, salt)
 const probe = await encryptMsg('x', kA.msgKey)
 assert.equal(await decryptMsg(probe, kB.msgKey), 'x', 'NFC/NFD normalization broken')
+
+// JSON envelope roundtrip
+const env = await encryptJson({ k: 'entry', e: { t: 'chat', text: 'xin chào' } }, keys.msgKey)
+assert.deepEqual(await decryptJson(env, keys2.msgKey),
+  { k: 'entry', e: { t: 'chat', text: 'xin chào' } })
+
+// backup export/import roundtrip + wrong-pass rejection
+const backup = { v: 1, log: [{ id: 'a:1', t: 'chat', text: 'hello' }] }
+const exportBlob = await sealExport(backup, keys.exportKey, salt)
+const parsedExport = parseExportBlob(exportBlob)
+const restoreKeys = await deriveKeys(pass, parsedExport.salt)
+assert.deepEqual(await openExport(parsedExport, restoreKeys.exportKey), backup)
+const badExportKeys = await deriveKeys(pass + 'x', parsedExport.salt)
+await assert.rejects(openExport(parsedExport, badExportKeys.exportKey), /BAD_KEY/)
+// a connection code must not parse as a backup and vice versa
+assert.throws(() => parseExportBlob(blobStr), /BAD_FORMAT/)
+assert.throws(() => parseBlob(exportBlob), /BAD_FORMAT/)
 
 console.log('crypto tests: ALL PASS')

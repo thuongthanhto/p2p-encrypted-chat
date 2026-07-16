@@ -6,8 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test:unit": "node test/crypto.test.js && node test/store.test.js",
     "test:crypto": "node test/crypto.test.js",
-    "test:e2e": "node test/e2e.js"
+    "test:e2e": "node test/e2e.js",
+    "test:sync": "node test/sync-e2e.js",
+    "test:relay": "node test/relay-e2e.js",
+    "test:all": "npm run test:unit && npm run test:e2e && npm run test:sync && npm run test:relay"
   },
   "devDependencies": {
     "puppeteer-core": "^24.0.0",

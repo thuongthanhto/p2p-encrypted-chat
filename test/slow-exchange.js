@@ -21,7 +21,7 @@ const browser = await launch({
 
 const url = 'file://' + DIST
 const pageA = await browser.newPage()
-const pageB = await browser.newPage()
+const pageB = await (await browser.createBrowserContext()).newPage()
 pageA.on('console', (m) => m.text().startsWith('[p2p]') && console.log('A', m.text()))
 pageB.on('console', (m) => m.text().startsWith('[p2p]') && console.log('B', m.text()))
 await pageA.goto(url)

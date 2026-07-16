@@ -26,7 +26,7 @@ const forceRelay = (page) => page.evaluateOnNewDocument(() => {
 
 const url = 'file://' + DIST
 const pageA = await browser.newPage()
-const pageB = await browser.newPage()
+const pageB = await (await browser.createBrowserContext()).newPage()
 await forceRelay(pageA)
 await forceRelay(pageB)
 await pageA.goto(url)

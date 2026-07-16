@@ -32,8 +32,10 @@ function fail(msg) {
 
 try {
   const url = 'file://' + DIST
+  // isolated storage per peer — two tabs in one profile share localStorage,
+  // which is not how two real devices behave
   const pageA = await browser.newPage()
-  const pageB = await browser.newPage()
+  const pageB = await (await browser.createBrowserContext()).newPage()
   await pageA.goto(url)
   await pageB.goto(url)
 
@@ -91,7 +93,7 @@ try {
   console.log('B → A message delivered + decrypted')
 
   // negative check: wrong passphrase must show an error, not connect
-  const pageC = await browser.newPage()
+  const pageC = await (await browser.createBrowserContext()).newPage()
   await pageC.goto(url)
   await pageC.bringToFront()
   await pageC.click('#btn-join')
@@ -104,14 +106,27 @@ try {
   if (!/passphrase/i.test(errText)) fail(`unexpected error text: ${errText}`)
   console.log('wrong passphrase correctly rejected')
 
-  // peer going away → the other side must show the connection-lost banner
+  // whiteboard: a stroke drawn on A must land in B's log
+  await pageA.bringToFront()
+  await pageA.click('#btn-tab-draw')
+  const box = await (await pageA.$('#board')).boundingBox()
+  await pageA.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.3)
+  await pageA.mouse.down()
+  await pageA.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.6, { steps: 8 })
+  await pageA.mouse.up()
+  await pageB.waitForFunction(
+    () => window.__room?.log.some((e) => e.t === 'draw' && e.s.p.length > 1),
+    { timeout: 10000, polling: 200 })
+  console.log('whiteboard stroke synced A → B')
+
+  // peer going away → banner appears but composing stays enabled (offline queue)
   await pageB.goto('about:blank')
   await pageA.waitForFunction(
     () => !document.getElementById('banner').hidden &&
-      document.getElementById('msg-input').disabled &&
-      /Connection lost/.test(document.getElementById('banner').textContent),
+      !document.getElementById('msg-input').disabled &&
+      /queued/.test(document.getElementById('banner').textContent),
     { timeout: 30000, polling: 200 })
-  console.log('peer loss shows connection-lost banner')
+  console.log('peer loss shows offline banner, composer stays enabled')
 
   console.log('e2e: ALL PASS')
 } catch (err) {

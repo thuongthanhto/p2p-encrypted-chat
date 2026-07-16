@@ -8,23 +8,36 @@
 <body>
   <main id="app">
 
-    <!-- Screen 1: Connect -->
+    <!-- Screen 1: Home -->
     <section id="screen-home">
       <h1>🔒 P2P Chat</h1>
-      <p class="sub">Encrypted 1-on-1 chat, direct machine-to-machine. No server, no account.</p>
-      <p class="warn">⚠️ Messages are <b>not saved</b> — close the tab and they're gone. If the connection drops, you must start a new session.</p>
+      <p class="sub">Encrypted 1-on-1 chat &amp; whiteboard, direct machine-to-machine. No server, no account.</p>
+      <p class="warn">History is kept <b>only on this device</b> (per room, until you forget the room).
+        Messages sent while your peer is offline are delivered the next time you are both connected.</p>
+      <div id="room-list"></div>
       <div class="row">
         <button id="btn-host" class="big">Create room</button>
         <button id="btn-join" class="big secondary">Join room</button>
       </div>
+      <button id="btn-restore" class="linkish">Restore from backup file…</button>
+      <div id="restore-panel" class="step" hidden>
+        <h3>Restore backup</h3>
+        <input id="restore-file" type="file" />
+        <input id="restore-pass" type="text" autocomplete="off" spellcheck="false"
+               placeholder="passphrase of the backed-up room" />
+        <button id="btn-restore-go">Restore</button>
+        <p id="restore-error" class="error" hidden></p>
+      </div>
     </section>
 
-    <!-- Host screen -->
+    <!-- Host screen (create room / create reconnect code) -->
     <section id="screen-host" hidden>
-      <h2>Create room</h2>
+      <button class="back" data-back>← Back</button>
+      <h2 id="host-title">Create room</h2>
       <div class="step">
         <h3>1 · Passphrase</h3>
-        <p class="hint">Read it out loud, or send it over a <b>different channel</b> than the code below.</p>
+        <p class="hint">Read it out loud, or send it over a <b>different channel</b> than the code below.
+          Rejoining an existing room keeps its passphrase.</p>
         <div id="host-pass" class="passphrase">…</div>
         <button class="copy" data-copy="host-pass">Copy passphrase</button>
       </div>
@@ -43,9 +56,10 @@
       <p id="host-error" class="error" hidden></p>
     </section>
 
-    <!-- Guest screen -->
+    <!-- Guest screen (join room / answer a reconnect code) -->
     <section id="screen-join" hidden>
-      <h2>Join room</h2>
+      <button class="back" data-back>← Back</button>
+      <h2 id="join-title">Join room</h2>
       <div class="step">
         <h3>1 · Enter passphrase</h3>
         <input id="join-pass" type="text" autocomplete="off" spellcheck="false"
@@ -68,18 +82,40 @@
     <!-- Chat screen -->
     <section id="screen-chat" hidden>
       <header>
-        <span id="chat-state" class="dot"></span>
-        <span>P2P connected · AES-GCM encrypted · no history saved</span>
+        <span id="chat-state" class="dot off"></span>
+        <span id="room-label" class="room-label"></span>
+        <nav class="tabs">
+          <button id="btn-tab-chat" class="tab active">Chat</button>
+          <button id="btn-tab-draw" class="tab">Draw</button>
+        </nav>
+        <span class="spacer"></span>
+        <button id="btn-export" class="mini" title="Download encrypted backup">Backup</button>
+        <button id="btn-leave" class="mini" title="Back to rooms">Rooms</button>
       </header>
       <div id="banner" class="banner" hidden>
-        Connection lost — a new session is needed.
-        <button id="btn-restart">Start over</button>
+        <span id="banner-text">Disconnected.</span>
+        <button id="btn-reconnect">Reconnect</button>
       </div>
-      <ul id="messages"></ul>
-      <form id="composer">
-        <input id="msg-input" type="text" autocomplete="off" placeholder="Say something…" />
-        <button type="submit">Send</button>
-      </form>
+      <div id="chat-panel" class="panel">
+        <ul id="messages"></ul>
+        <form id="composer">
+          <input id="msg-input" type="text" autocomplete="off" placeholder="Say something…" />
+          <button type="submit">Send</button>
+        </form>
+      </div>
+      <div id="draw-panel" class="panel" hidden>
+        <div class="board-tools">
+          <button class="swatch active" data-color="#e8ecf4" style="background:#e8ecf4"></button>
+          <button class="swatch" data-color="#4f8cff" style="background:#4f8cff"></button>
+          <button class="swatch" data-color="#59d499" style="background:#59d499"></button>
+          <button class="swatch" data-color="#ffd27a" style="background:#ffd27a"></button>
+          <button class="swatch" data-color="#ff7a7a" style="background:#ff7a7a"></button>
+          <input id="stroke-width" type="range" min="2" max="24" value="4" title="Brush size" />
+          <span class="spacer"></span>
+          <button id="btn-wipe" class="mini">Clear board</button>
+        </div>
+        <canvas id="board"></canvas>
+      </div>
     </section>
 
   </main>

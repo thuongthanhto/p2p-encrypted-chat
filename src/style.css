@@ -144,3 +144,107 @@ textarea:focus, input:focus { outline: 2px solid var(--accent); border-color: tr
 
 #composer { display: flex; gap: 8px; }
 #composer input { flex: 1; }
+
+/* Rooms */
+#room-list { margin-bottom: 16px; }
+.room-card {
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.room-card .room-name {
+  flex: 1;
+  font: 600 0.95rem/1.4 ui-monospace, Menlo, monospace;
+  color: var(--ok);
+  word-break: break-all;
+  min-width: 140px;
+}
+.room-card .mini { margin: 0; }
+
+.mini {
+  background: var(--accent-2);
+  font-size: 0.82rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.mini.danger { color: var(--err); }
+
+.linkish {
+  background: none;
+  color: var(--dim);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  padding: 10px 0;
+}
+
+.back {
+  background: none;
+  color: var(--dim);
+  padding: 0 0 12px;
+  font-size: 0.9rem;
+}
+
+#restore-panel input { margin-bottom: 8px; }
+#restore-panel input[type="file"] { padding: 8px; font-size: 0.85rem; }
+
+/* Chat header */
+#screen-chat header { gap: 10px; flex-wrap: wrap; }
+.room-label {
+  font: 600 0.85rem/1.4 ui-monospace, Menlo, monospace;
+  color: var(--ok);
+}
+.spacer { flex: 1; }
+.dot.off { background: var(--dim); }
+
+.tabs { display: flex; gap: 4px; }
+.tab {
+  background: none;
+  color: var(--dim);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+.tab.active { background: var(--accent-2); color: var(--text); }
+
+.panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.panel[hidden] { display: none; }
+
+#messages li.pending { opacity: 0.55; }
+
+/* Whiteboard */
+.board-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+}
+.swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  padding: 0;
+  border: 2px solid transparent;
+}
+.swatch.active { border-color: var(--text); }
+#stroke-width { width: 90px; }
+
+#board {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  background: #0c111c;
+  border: 1px solid #2b3548;
+  border-radius: 10px;
+  touch-action: none;
+  cursor: crosshair;
+}

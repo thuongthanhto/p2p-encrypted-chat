@@ -8,7 +8,8 @@ const te = new TextEncoder()
 const td = new TextDecoder()
 
 // Blob layout: MAGIC(4) ‖ salt(16) ‖ iv(12) ‖ ciphertext, base64url-encoded.
-const MAGIC = Uint8Array.of(0x50, 0x32, 0x43, 0x31) // "P2C1"
+const MAGIC = Uint8Array.of(0x50, 0x32, 0x43, 0x31) // "P2C1" — connection codes
+const MAGIC_EXPORT = Uint8Array.of(0x50, 0x32, 0x45, 0x31) // "P2E1" — backup files
 const SALT_LEN = 16
 const IV_LEN = 12
 const PBKDF2_ITERS = 310_000
@@ -45,7 +46,12 @@ export async function deriveKeys(passphrase, salt) {
   const sub = (info) => crypto.subtle.deriveKey(
     { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0), info: te.encode(info) },
     master, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt'])
-  return { sdpKey: await sub('sdp'), msgKey: await sub('msg'), salt }
+  return {
+    sdpKey: await sub('sdp'),
+    msgKey: await sub('msg'),
+    exportKey: await sub('export'),
+    salt,
+  }
 }
 
 async function deflate(bytes) {
@@ -132,4 +138,52 @@ export async function decryptMsg(buffer, msgKey) {
   } catch {
     throw new Error('BAD_KEY')
   }
+}
+
+// JSON envelopes over the DataChannel (sync protocol, chat/draw entries)
+export async function encryptJson(obj, msgKey) {
+  return encryptMsg(JSON.stringify(obj), msgKey)
+}
+
+export async function decryptJson(buffer, msgKey) {
+  return JSON.parse(await decryptMsg(buffer, msgKey))
+}
+
+// Backup files: MAGIC_EXPORT(4) ‖ salt(16) ‖ iv(12) ‖ ct(deflate(json)), base64url.
+// Same passphrase-derived key family as the session; salt travels in the file so
+// a backup can be restored on a fresh device with just the file + passphrase.
+export async function sealExport(obj, exportKey, salt) {
+  const compressed = await deflate(te.encode(JSON.stringify(obj)))
+  const iv = crypto.getRandomValues(new Uint8Array(IV_LEN))
+  const ct = new Uint8Array(
+    await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, exportKey, compressed))
+  const out = new Uint8Array(MAGIC_EXPORT.length + SALT_LEN + IV_LEN + ct.length)
+  out.set(MAGIC_EXPORT, 0)
+  out.set(salt, MAGIC_EXPORT.length)
+  out.set(iv, MAGIC_EXPORT.length + SALT_LEN)
+  out.set(ct, MAGIC_EXPORT.length + SALT_LEN + IV_LEN)
+  return toB64url(out)
+}
+
+export function parseExportBlob(blobStr) {
+  const bytes = fromB64url(cleanBlob(blobStr))
+  if (bytes.length < MAGIC_EXPORT.length + SALT_LEN + IV_LEN + 17 ||
+      !MAGIC_EXPORT.every((b, i) => bytes[i] === b)) {
+    throw new Error('BAD_FORMAT')
+  }
+  let off = MAGIC_EXPORT.length
+  const salt = bytes.slice(off, off += SALT_LEN)
+  const iv = bytes.slice(off, off += IV_LEN)
+  const ct = bytes.slice(off)
+  return { salt, iv, ct }
+}
+
+export async function openExport({ iv, ct }, exportKey) {
+  let compressed
+  try {
+    compressed = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, exportKey, ct)
+  } catch {
+    throw new Error('BAD_KEY')
+  }
+  return JSON.parse(td.decode(await inflate(new Uint8Array(compressed))))
 }
